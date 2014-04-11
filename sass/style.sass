@@ -2,6 +2,7 @@
 
 /*! Bootstrap */
 @import "bootstrap-custom"
+@import "font-awesome"
 
 /*! Base */
 @import "base/mixins"
@@ -51,8 +52,10 @@ section.main
 	margin: 0 auto
 	max-width: 42em
 	padding: 0 0 3em
-	h1
+	h1.pagetitle
 		font-size: 2.5em
+		margin-top: 0.5em
+
 	@media (min-width: 1em) // 16px
 		font-size: 0.9em
 	@media (min-width: 18em) // 288px
@@ -65,3 +68,29 @@ section.main
 		font-size: 1.1em
 	@media (min-width: 80em) // 1280px
 		font-size: 1.2em
+
+.controls.main
+	padding: 0.5em 1em 3em
+	.buttons
+		float: right
+	.saved &, .saving &
+		button.cancel, button.save
+			@extend .btn.disabled
+		button.cancel
+			@extend .btn-default.disabled
+		button.save
+			@extend .btn-success.disabled
+			&:after
+				content: 'd'
+	.saving &
+		button.save
+			&:after
+				content: '\f021'
+				@extend .fa
+				@extend .fa-spin
+				margin-left: 0.35em
+
+
+
+		
+

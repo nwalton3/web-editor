@@ -23,12 +23,14 @@ module.exports = (grunt) ->
 				files:
 					'js/script.min.js' : [
 						'js/libs/jquery.min.js',
+						'js/bootstrap.js',
 						'js/plugins/typogr.js',
 						'js/script.js']
 			touch:
 				files:
 					'js/script-touch.min.js' : [
 						'js/libs/jquery.min.js',
+						'js/bootstrap.js',
 						'js/plugins/typogr.js',
 						'js/plugins/touchswipe.js',
 						'js/touch.js',
@@ -54,6 +56,24 @@ module.exports = (grunt) ->
 				'js/script.js'
 				]
 
+		bootstrap:
+			dest: ''
+			js: [
+				'bootstrap-transition.js',
+				#'bootstrap-modal.js',
+				'bootstrap-dropdown.js',
+				#'bootstrap-scrollspy.js',
+				#'bootstrap-tab.js',
+				#'bootstrap-tooltip.js',
+				#'bootstrap-popover.js',
+				#'bootstrap-affix.js',
+				#'bootstrap-alert.js',
+				#'bootstrap-button.js',
+				#'bootstrap-collapse.js',
+				#'bootstrap-carousel.js',
+				#'bootstrap-typeahead.js',
+				]
+			css: []
 
 		sass:
 			options:

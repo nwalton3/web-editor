@@ -13,6 +13,7 @@
     "coffee-script": "*",
     "load-grunt-tasks": "*",
     "grunt-contrib-connect": "*",
-    "grunt-newer": "*"
+    "grunt-newer": "*",
+    "grunt-bootstrap": "*"
   }
 }

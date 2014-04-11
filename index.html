@@ -21,19 +21,21 @@
     </script>
     <script src="/js/init.min.js?v=1"></script>
   </head>
-  <body class="editor">
+  <body class="editor saving">
     <header class="main">
       <h1><a href="/">Web Editor</a></h1>
     </header>
-    <div class="controls">
-      <div class="btn-group">
-        <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle history">History</button>
-        <div role="menu" class="dropdown-menu">
-          <li>No history yet</li>
+    <div class="main controls">
+      <div class="buttons">
+        <div class="btn-group">
+          <button type="button" data-toggle="dropdown" class="btn btn-default dropdown-toggle history">History</button>
+          <div role="menu" class="dropdown-menu">
+            <li>No history yet</li>
+          </div>
         </div>
+        <button type="button" class="btn btn-default cancel">Cancel</button>
+        <button type="button" class="btn btn-success btn-lg save">Save</button>
       </div>
-      <button type="button" class="btn btn-default cancel">Cancel</button>
-      <button type="button" class="btn btn-success btn-lg save">Save</button>
     </div>
     <section class="main">
       <h1 class="pagetitle">Page title</h1>
