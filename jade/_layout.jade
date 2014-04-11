@@ -1,0 +1,41 @@
+html.no-js(lang="en")
+	head
+		- var localEnv = true
+		- var cssVersion = 1
+		- var jsVersion = 1
+
+		- var assetBase = '/';
+		- var extension = localEnv ? '.html' : '';
+
+		meta(charset='UTF-8')
+		meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
+		block title
+			title Nate Walton
+		block meta
+			meta(name='description', content="Desc here")
+			meta(name='keywords', content='')
+		meta(name='viewport', content='width=device-width, , initial-scale=1.0')
+
+		// Place favicon.ico and apple-touch-icon.png in the root directory
+		link(rel='shortcut icon', href=assetBase + 'favicon.ico?v=3')
+
+		// Styles
+		link(rel='stylesheet', href=assetBase + 'css/style.css?v=' + cssVersion)
+
+		// Scripts loaded via script loader. See notes in init.js file.
+		script(type="text/javascript", src="//use.typekit.net/nyn3skg.js")
+		script(type="text/javascript").
+			try{Typekit.load();}catch(e){};
+			window.jsVersion   = #{jsVersion};
+			window.assets      = "#{assetBase}";
+		script(src= assetBase + 'js/init.min.js?v=' + jsVersion)
+
+	body(class="about")
+		header.main
+			h1 
+				a(href="/") Home Page
+				a(href="/") Link 1
+
+		block content
+
+		footer.main

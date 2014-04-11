@@ -1,0 +1,56 @@
+{
+  "page": {
+    "title": "Home",
+    "menu": "home"
+  },
+  "quotes": [
+    {
+      "text": "Good design is a lot like clear thinking made visual.",
+      "byline": "Edward Tufte"
+    }
+  ],
+  "contents": [
+    {
+      "heading": "Portfolio",
+      "url": "/portfolio",
+      "images": [
+        {
+          "url": "sg_home.jpg",
+          "title": "Sacred Gifts",
+          "hash": "#gifts"
+        },
+        {
+          "url": "byu-home.jpg",
+          "title": "BYU Web",
+          "hash": "#byu"
+        },
+        {
+          "url": "thesis_cards.jpg",
+          "title": "Connections",
+          "hash": "#thesis"
+        }
+      ]
+    },
+    {
+      "heading": "Student Work",
+      "url": "/students",
+      "images": [
+        {
+          "url": "student/poster1.jpg",
+          "title": "Poster",
+          "hash": "#poster"
+        },
+        {
+          "url": "student/album1.jpg",
+          "title": "Album",
+          "hash": "#album"
+        },
+        {
+          "url": "student/photoshop3.jpg",
+          "title": "Photoshop",
+          "hash": "#photoshop"
+        }
+      ]
+    }
+  ]
+}

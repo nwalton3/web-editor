@@ -1,0 +1,18 @@
+{
+  "name": "nwalton-grunt",
+  "version": "1.0.0",
+  "devDependencies": {
+    "grunt": "~0.4.x",
+    "grunt-contrib-sass": "0.4.x",
+    "grunt-contrib-watch": "*",
+    "grunt-contrib-jade": "*",
+    "grunt-yaml": "*",
+    "grunt-contrib-jshint": "*",
+    "grunt-contrib-uglify": "*",
+    "grunt-autoprefixer": "0.6.x",
+    "coffee-script": "*",
+    "load-grunt-tasks": "*",
+    "grunt-contrib-connect": "*",
+    "grunt-newer": "*"
+  }
+}
