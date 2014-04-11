@@ -1,5 +1,9 @@
 /* style.sass */
 
+/*! Bootstrap */
+@import "bootstrap-custom"
+
+/*! Base */
 @import "base/mixins"
 @import "base/colors"
 
@@ -11,8 +15,53 @@
 @import "variables"
 
 
+/*! Specific */
 
 // General
 *, *:before, *:after
 	box-sizing: border-box
 	position: relative
+
+body
+	font-family: $sans-font-stack
+	font-weight: $sans-font-weight
+	line-height: 1.5
+
+h1, h2, h3
+	font-family: $serif-font-stack
+	font-weight: $serif-font-weight
+
+header.main
+	background-color: #000
+	color: #ccc
+	h1
+		font-family: $serif-ssm-font-stack
+		font-weight: $serif-ssm-font-weight
+		font-size: 1.75em
+		padding: 0.25em 0.5em
+		margin: 0
+	a
+		color: #ccc
+		&:hover
+			color: #fff
+			text-decoration: none
+
+section.main
+	width: 90%
+	margin: 0 auto
+	max-width: 42em
+	padding: 0 0 3em
+	h1
+		font-size: 2.5em
+	@media (min-width: 1em) // 16px
+		font-size: 0.9em
+	@media (min-width: 18em) // 288px
+		font-size: 0.95em
+	@media (min-width: 28em) // 448px
+		font-size: 1em
+	@media (min-width: 46em) // 736px
+		font-size: 1em
+	@media (min-width: 68em) // 960px
+		font-size: 1.1em
+	@media (min-width: 80em) // 1280px
+		font-size: 1.2em

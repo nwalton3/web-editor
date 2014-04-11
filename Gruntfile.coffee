@@ -62,6 +62,7 @@ module.exports = (grunt) ->
 				debugInfo: '<%= local %>'
 				trace:     '<%= local %>'
 				sourcemap: '<%= local %>'
+				includePaths: []
 			files:
 				expand: true
 				cwd: 'sass/'
@@ -119,6 +120,8 @@ module.exports = (grunt) ->
 				files: ['css/**/*']
 				tasks: ['newer:autoprefixer']
 			jade:
+				options:
+					livereload: true
 				files: ['jade/**/*.jade']
 				tasks: ['newer:jade']
 			js:
@@ -128,9 +131,9 @@ module.exports = (grunt) ->
 				files: ['data/**/*.yml']
 				tasks: ['newer:yaml']
 			livereload:
-				files: ['img/*', '*.html', 'js/*.min.js']
 				options:
 					livereload: true
+				files: ['img/*', 'js/*.min.js']
 
 
 		connect:

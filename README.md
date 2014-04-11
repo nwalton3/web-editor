@@ -1,4 +1,4 @@
-Grunt Starter
+Web Editor
 =========
 
-Starter project for grunt workflow
+A simple web-based content editor

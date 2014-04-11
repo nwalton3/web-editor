@@ -1,3 +1,5 @@
+require 'bootstrap-sass'
+
 preferred_syntax = :sass
 http_path = '/'
 css_dir = 'css'
