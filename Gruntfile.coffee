@@ -24,6 +24,8 @@ module.exports = (grunt) ->
 					'js/script.min.js' : [
 						'js/libs/jquery.min.js',
 						'js/bootstrap.js',
+						'js/libs/rangy.min.js',
+						'js/plugins/rangy-saverestore.min.js',
 						'js/plugins/typogr.js',
 						'js/script.js']
 			touch:
@@ -31,6 +33,8 @@ module.exports = (grunt) ->
 					'js/script-touch.min.js' : [
 						'js/libs/jquery.min.js',
 						'js/bootstrap.js',
+						'js/libs/rangy.min.js',
+						'js/plugins/rangy-saverestore.min.js',
 						'js/plugins/typogr.js',
 						'js/plugins/touchswipe.js',
 						'js/touch.js',
@@ -60,7 +64,7 @@ module.exports = (grunt) ->
 			dest: ''
 			js: [
 				'bootstrap-transition.js',
-				#'bootstrap-modal.js',
+				'bootstrap-modal.js',
 				'bootstrap-dropdown.js',
 				#'bootstrap-scrollspy.js',
 				#'bootstrap-tab.js',
