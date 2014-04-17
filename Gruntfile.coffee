@@ -54,6 +54,7 @@ module.exports = (grunt) ->
 				"smarttabs" : true
 				"jquery" : true
 				"browser" : true
+				"expr" : false
 			files:[
 				'js/init.js',
 				'js/touch.js',
@@ -61,12 +62,13 @@ module.exports = (grunt) ->
 				]
 
 		coffee:
-			options:
-				sourceMap: true
-				sourceMapDir: "coffee/maps"
 			files:
-				"js/script.js" : "coffee/script.coffee"
-
+				expand: true
+				flatten: true
+				cwd: 'coffee/'
+				src: ['*.coffee']
+				dest: 'js/'
+				ext: '.js'
 
 		bootstrap:
 			dest: ''
@@ -157,10 +159,12 @@ module.exports = (grunt) ->
 				files: ['jade/**/*.jade']
 				tasks: ['newer:jade']
 			coffee:
-				files: ['coffee/script.coffee']
-				tasks: ['newer:coffee']
+				options:
+					livereload: true
+				files: ['coffee/*.coffee']
+				tasks: ['coffee', 'newer:jshint', 'newer:uglify']
 			js:
-				files: ['js/script.js', 'js/touch.js']
+				files: ['js/bootstrap.js']
 				tasks: ['newer:jshint', 'newer:uglify']
 			yaml:
 				files: ['data/**/*.yml']
@@ -189,5 +193,5 @@ module.exports = (grunt) ->
 	grunt.registerTask('prod',  ['setProd',  'compile'])
 
 	# Default task(s).
-	grunt.registerTask('compile', ['sass', 'autoprefixer', 'jade', 'jshint', 'uglify', 'yaml'])
-	grunt.registerTask('default', ['compile', 'connect', 'watch'])
+	grunt.registerTask('compile', ['sass', 'autoprefixer', 'jade', 'coffee', 'jshint', 'uglify', 'yaml'])
+	grunt.registerTask('default', ['connect', 'watch'])
