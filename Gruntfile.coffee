@@ -60,6 +60,14 @@ module.exports = (grunt) ->
 				'js/script.js'
 				]
 
+		coffee:
+			options:
+				sourceMap: true
+				sourceMapDir: "coffee/maps"
+			files:
+				"js/script.js" : "coffee/script.coffee"
+
+
 		bootstrap:
 			dest: ''
 			js: [
@@ -148,6 +156,9 @@ module.exports = (grunt) ->
 					livereload: true
 				files: ['jade/**/*.jade']
 				tasks: ['newer:jade']
+			coffee:
+				files: ['coffee/script.coffee']
+				tasks: ['newer:coffee']
 			js:
 				files: ['js/script.js', 'js/touch.js']
 				tasks: ['newer:jshint', 'newer:uglify']

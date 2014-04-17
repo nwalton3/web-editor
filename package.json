@@ -10,7 +10,7 @@
     "grunt-contrib-jshint": "*",
     "grunt-contrib-uglify": "*",
     "grunt-autoprefixer": "0.6.x",
-    "coffee-script": "*",
+    "grunt-contrib-coffee": "*",
     "load-grunt-tasks": "*",
     "grunt-contrib-connect": "*",
     "grunt-newer": "*",
