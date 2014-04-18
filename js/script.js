@@ -1,11 +1,15 @@
 (function() {
-  var addLink, addPlaceholder, addURL, addWrapper, assetBase, clearCursorMarker, clearSelectionMarkers, getFirstRange, getSelectedText, handleHover, handleSelection, hasElement, hideAddButton, hideTextEditBox, makeSelectionWrappable, normalizeText, removeLink, removeWrapper, savedSelection, setCursorMarker, setSelectionMarker, showAddButton, showTextEditBox, surroundRange, throttle, toggleTag;
+  var addLink, addPlaceholder, addURL, addWrapper, assetBase, checkPlaceholderPosition, clearCursorMarker, clearSelectionMarkers, currentPlaceholderPosition, getFirstRange, getSelectedText, handleHover, handleSelection, hasElement, hideAddBar, hideAddButton, hideTextEditBox, makeSelectionWrappable, movePlaceholder, moveTimer, normalizeText, removeLink, removeWrapper, savedSelection, setCursorMarker, setSelectionMarker, showAddBar, showAddButton, showTextEditBox, surroundRange, throttle, toggleTag;
 
   assetBase = (window.assets ? window.assets : "");
 
   savedSelection = void 0;
 
   addPlaceholder = $('.addPlaceholder');
+
+  currentPlaceholderPosition = null;
+
+  moveTimer = null;
 
   $(document).ready(function() {
     rangy.init();
@@ -64,7 +68,7 @@
    */
 
   handleHover = function(e, out) {
-    var addBar, bot, height, my, nearBot, nearTop, parent, pos, t, top;
+    var addBar, bot, height, margin, my, nearBot, nearTop, parent, pos, t, top;
     t = $(e.currentTarget);
     parent = t.hasClass('editable');
     addBar = t.hasClass("addPlaceholder");
@@ -73,42 +77,63 @@
       pos = t.offset();
       top = pos.top;
       bot = pos.top + height;
+      margin = parseInt(t.css('margin-bottom'));
       my = e.pageY;
       nearTop = my > top && my < top + (height / 2) && my < top + 100;
-      nearBot = my < bot && my > bot - (height / 2) && my > bot - 125;
+      nearBot = my < (bot + margin) && my > bot - (height / 2) && my > bot - 125;
       if (nearTop) {
-        showAddButton(t, "top", top);
+        checkPlaceholderPosition(t, "top");
         if (!t.prev().hasClass("addPlaceholder")) {
           $(".addPlaceholder");
         }
       } else if (nearBot) {
-        showAddButton(t, "bottom");
+        checkPlaceholderPosition(t, "bottom");
       } else {
         hideAddButton();
       }
     } else {
-      console.log(t);
+      showAddButton();
     }
   };
 
 
   /*
-   * Func: showAddButton
-   * Desc: Show the button that activates the add bar in the correct location
-   * Args: @el - jQuery object - The element before or after where the button should appear
-           @location - String - The location relative to @el where the button should appear (takes "top" or "bot")
+   * Func: checkPlaceholderPosition
+   * Desc: Check to see if the placeholder is in the proper position and show the add button if applicable
+   * Args: @el - jQuery object - The element before or after where the add placeholder should appear
+           @location - String - The location relative to @el where the placeholder should appear ("top" or "bot")
    */
 
-  showAddButton = function(el, location) {
-    if (location === "top") {
-      if (el.next() !== addPlaceholder) {
-        addPlaceholder.detach().insertBefore(el);
-      }
-    } else if (location === "bottom") {
-      if (el.prev() !== addPlaceholder) {
-        addPlaceholder.detach().insertAfter(el);
+  checkPlaceholderPosition = function(el, location) {
+    var moveBottom, moveTop;
+    moveTop = location === "top" && (el.index() - 1) !== currentPlaceholderPosition;
+    moveBottom = location === "bottom" && (el.index() + 1) !== currentPlaceholderPosition;
+    if ((moveTop || moveBottom) && moveTimer === null) {
+      if (addPlaceholder.hasClass('showButton')) {
+        hideAddButton();
+        moveTimer = setTimeout((function() {
+          console.log("movetimer");
+          movePlaceholder(el, location);
+          moveTimer = null;
+        }), 200);
+      } else {
+        movePlaceholder(el, location);
       }
     }
+    showAddButton();
+  };
+
+  movePlaceholder = function(el, location) {
+    if (location === "top") {
+      addPlaceholder.detach().insertBefore(el);
+    } else if (location === "bottom") {
+      addPlaceholder.detach().insertAfter(el);
+    }
+    currentPlaceholderPosition = addPlaceholder.index();
+    showAddButton();
+  };
+
+  showAddButton = function() {
     if (!addPlaceholder.hasClass('showButton')) {
       addPlaceholder.addClass('showButton');
     }
@@ -116,6 +141,17 @@
 
   hideAddButton = function() {
     addPlaceholder.removeClass('showButton');
+    addPlaceholder.removeClass('showBar');
+  };
+
+  showAddBar = function() {
+    if (!addPlaceholder.hasClass('showBar')) {
+      addPlaceholder.addClass('showBar');
+    }
+  };
+
+  hideAddBar = function() {
+    addPlaceholder.removeClass('showBar');
   };
 
 

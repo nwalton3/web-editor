@@ -9,6 +9,8 @@
 assetBase = (if window.assets then window.assets else "")
 savedSelection = undefined
 addPlaceholder = $('.addPlaceholder')
+currentPlaceholderPosition = null
+moveTimer = null
 
 
 # On page load
@@ -79,46 +81,77 @@ handleHover = (e, out) ->
 		pos = t.offset()
 		top = pos.top
 		bot = pos.top + height
+		margin = parseInt( t.css('margin-bottom') )
 		my = e.pageY
 
 		nearTop = my > top and my < top + (height / 2) and my < top + 100
-		nearBot = my < bot and my > bot - (height / 2) and my > bot - 125
+		nearBot = my < (bot + margin) and my > bot - (height / 2) and my > bot - 125
 
 		if nearTop
-			showAddButton t, "top", top
+			checkPlaceholderPosition t, "top"
 			if !t.prev().hasClass("addPlaceholder")
 				$(".addPlaceholder")
 		else if nearBot
-			showAddButton t, "bottom"
+			checkPlaceholderPosition t, "bottom"
 		else
 			hideAddButton()
 	else
-		console.log t
+		showAddButton()
+		# console.log t
 
 	return
 
 
 ###
- * Func: showAddButton
- * Desc: Show the button that activates the add bar in the correct location
- * Args: @el - jQuery object - The element before or after where the button should appear
-         @location - String - The location relative to @el where the button should appear (takes "top" or "bot")
+ * Func: checkPlaceholderPosition
+ * Desc: Check to see if the placeholder is in the proper position and show the add button if applicable
+ * Args: @el - jQuery object - The element before or after where the add placeholder should appear
+         @location - String - The location relative to @el where the placeholder should appear ("top" or "bot")
 ###
-showAddButton = (el, location) ->
+checkPlaceholderPosition = (el, location) ->
+	moveTop = location is "top" and (el.index() - 1) != currentPlaceholderPosition
+	moveBottom = location is "bottom" and (el.index() + 1) != currentPlaceholderPosition
 
+	if (moveTop or moveBottom) and moveTimer == null
+		if addPlaceholder.hasClass('showButton')
+			hideAddButton()
+			moveTimer = setTimeout ( -> 
+				console.log "movetimer"
+				movePlaceholder el, location
+				moveTimer = null
+				return ), 200
+		else
+			movePlaceholder el, location
+	showAddButton()
+
+	return
+
+movePlaceholder = (el, location) ->
 	if location is "top"
-		if el.next() != addPlaceholder
-			addPlaceholder.detach().insertBefore(el)
+		addPlaceholder.detach().insertBefore(el)
 	else if location is "bottom"
-		if el.prev() != addPlaceholder
-			addPlaceholder.detach().insertAfter(el)
+		addPlaceholder.detach().insertAfter(el)
+	currentPlaceholderPosition = addPlaceholder.index()
+	showAddButton()
+	return
 
+showAddButton = () ->
 	if !addPlaceholder.hasClass('showButton')
 		addPlaceholder.addClass('showButton')
 	return
 
 hideAddButton = () ->
 	addPlaceholder.removeClass('showButton')
+	addPlaceholder.removeClass('showBar')
+	return
+
+showAddBar = () ->
+	if !addPlaceholder.hasClass('showBar')
+		addPlaceholder.addClass('showBar')
+	return
+
+hideAddBar = () ->
+	addPlaceholder.removeClass('showBar')
 	return
 
 

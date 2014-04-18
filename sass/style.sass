@@ -96,10 +96,11 @@ section.main
 	* 
 		position: static
 
-.textEditBar
-	position: absolute
+.addPlaceholder
+	position: relative
 
 .textEditBar, .addButton, .addBar
+	position: absolute
 	transition: all 0.2s ease
 	button
 		text-indent: -999em
@@ -112,4 +113,19 @@ section.main
 			left: 0
 			text-align: center
 
+.addButton
+	top: -1.2em
+	left: -3em
+	display: block
+	opacity: 0
+	transition: opacity 0.2s ease
+	.showButton &
+		opacity: 1
+	.showBar &, .showButton.showBar &
+		opacity: 0
 
+.addBar
+	opacity: 0
+	transition: opacity 0.2s ease
+	.showBar &
+		opacity: 1
