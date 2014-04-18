@@ -95,13 +95,16 @@ section.main
 	outline: none
 	* 
 		position: static
+		outline: none
 
 .addPlaceholder
 	position: relative
 
+$speed: 200ms
+
 .textEditBar, .addButton, .addBar
 	position: absolute
-	transition: all 0.2s ease
+	transition: all $speed ease
 	button
 		text-indent: -999em
 		width: 2.5em
@@ -114,18 +117,38 @@ section.main
 			text-align: center
 
 .addButton
-	top: -1.2em
-	left: -3em
+	top: -0.2em
+	left: -1.75em
 	display: block
 	opacity: 0
-	transition: opacity 0.2s ease
+	button
+		margin-left: -50%
+		margin-top: -50%
+		color: #888
+		width: 2em
+		border-radius: 50%
+		transition: all $speed ease
+		-webkit-transform: rotate(-22.5deg)
+		transform: rotate(-22.5deg)
+		outline: none
+		&:hover
+			color: #333
 	.showButton &
 		opacity: 1
-	.showBar &, .showButton.showBar &
-		opacity: 0
+		left: -1.5em
+		button
+			-webkit-transform: rotate(0)
+			transform: rotate(0)
+	.showBar.showButton &
+		button
+			-webkit-transform: rotate(90)
+			transform: rotate(90)
 
 .addBar
 	opacity: 0
-	transition: opacity 0.2s ease
+	transition: opacity $speed ease
+	overflow: hidden
+	height: 1px
+	width: 1px
 	.showBar &
 		opacity: 1

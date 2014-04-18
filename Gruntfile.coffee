@@ -19,7 +19,7 @@ module.exports = (grunt) ->
 				mangle: false
 				preserveComments: 'some'
 				banner: '/*! <%= pkg.name %> - v<%= pkg.version %>  */'
-				beautify: true
+				beautify: '<%= local %>'
 				sourceMap: '<%= local %>'
 			script:
 				files:

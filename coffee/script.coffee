@@ -26,10 +26,9 @@ $(document).ready ->
 		.on("keyup", handleSelection)
 	$('.editable')
 		.on('mouseover', '> *', ( (e) -> handleHover e) )
-		.on('mouseout', '> *', ( (e) -> handleHover e, true) )
 		.on('mousemove', '> *', throttle ( (e) ->
 			handleHover e
-			return), 200 )
+			return), 100 )
 
 	# Button bindings
 	$(".add-bold").on "click", (e) -> toggleTag "strong"
@@ -41,6 +40,9 @@ $(document).ready ->
 	$("#addLink #linkInput").on "keyup", (e) -> 
 		if e.keyCode is 13
 			addURL "temporaryLink", $('#linkInput').val()
+
+	$('.addPlaceholder .add-item').on "click", toggleAddBar
+
 	return
 
 
@@ -122,7 +124,8 @@ checkPlaceholderPosition = (el, location) ->
 				return ), 200
 		else
 			movePlaceholder el, location
-	showAddButton()
+	else if moveTimer == null
+		showAddButton()
 
 	return
 
@@ -132,7 +135,7 @@ movePlaceholder = (el, location) ->
 	else if location is "bottom"
 		addPlaceholder.detach().insertAfter(el)
 	currentPlaceholderPosition = addPlaceholder.index()
-	showAddButton()
+	# setTimeout showAddButton 25
 	return
 
 showAddButton = () ->
@@ -144,6 +147,12 @@ hideAddButton = () ->
 	addPlaceholder.removeClass('showButton')
 	addPlaceholder.removeClass('showBar')
 	return
+
+toggleAddBar = () ->
+	if !addPlaceholder.hasClass('showBar')
+		showAddBar()
+	else
+		hideAddBar()
 
 showAddBar = () ->
 	if !addPlaceholder.hasClass('showBar')
