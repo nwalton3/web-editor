@@ -1,5 +1,5 @@
 (function() {
-  var addLink, addPlaceholder, addURL, addWrapper, assetBase, checkPlaceholderPosition, clearCursorMarker, clearSelectionMarkers, currentPlaceholderPosition, getFirstRange, getSelectedText, handleHover, handleSelection, hasElement, hideAddBar, hideAddButton, hideTextEditBox, makeSelectionWrappable, movePlaceholder, moveTimer, normalizeText, removeLink, removeWrapper, savedSelection, setCursorMarker, setSelectionMarker, showAddBar, showAddButton, showTextEditBox, surroundRange, throttle, toggleTag;
+  var addLink, addPlaceholder, addURL, addWrapper, assetBase, checkPlaceholderPosition, clearCursorMarker, clearSelectionMarkers, currentPlaceholderPosition, getFirstRange, getSelectedText, handleHover, handleSelection, hasElement, hideAddBar, hideAddButton, hideTextEditBox, makeSelectionWrappable, movePlaceholder, moveTimer, normalizeText, removeLink, removeWrapper, savedSelection, setCursorMarker, setSelectionMarker, showAddBar, showAddButton, showTextEditBox, surroundRange, throttle, toggleAddBar, toggleTag;
 
   assetBase = (window.assets ? window.assets : "");
 
@@ -19,11 +19,9 @@
     $(document).on("mouseup", handleSelection).on("keyup", handleSelection);
     $('.editable').on('mouseover', '> *', (function(e) {
       return handleHover(e);
-    })).on('mouseout', '> *', (function(e) {
-      return handleHover(e, true);
     })).on('mousemove', '> *', throttle((function(e) {
       handleHover(e);
-    }), 200));
+    }), 100));
     $(".add-bold").on("click", function(e) {
       return toggleTag("strong");
     });
@@ -44,6 +42,7 @@
         return addURL("temporaryLink", $('#linkInput').val());
       }
     });
+    $('.addPlaceholder .add-item').on("click", toggleAddBar);
   });
 
 
@@ -119,8 +118,9 @@
       } else {
         movePlaceholder(el, location);
       }
+    } else if (moveTimer === null) {
+      showAddButton();
     }
-    showAddButton();
   };
 
   movePlaceholder = function(el, location) {
@@ -130,7 +130,6 @@
       addPlaceholder.detach().insertAfter(el);
     }
     currentPlaceholderPosition = addPlaceholder.index();
-    showAddButton();
   };
 
   showAddButton = function() {
@@ -142,6 +141,14 @@
   hideAddButton = function() {
     addPlaceholder.removeClass('showButton');
     addPlaceholder.removeClass('showBar');
+  };
+
+  toggleAddBar = function() {
+    if (!addPlaceholder.hasClass('showBar')) {
+      return showAddBar();
+    } else {
+      return hideAddBar();
+    }
   };
 
   showAddBar = function() {
