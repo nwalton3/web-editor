@@ -1,5 +1,5 @@
 (function() {
-  var addLink, addPlaceholder, addURL, addWrapper, assetBase, checkPlaceholderPosition, clearCursorMarker, clearSelectionMarkers, currentPlaceholderPosition, getFirstRange, getSelectedText, handleHover, handleSelection, hasElement, hideAddBar, hideAddButton, hideTextEditBox, makeSelectionWrappable, movePlaceholder, moveTimer, normalizeText, removeLink, removeWrapper, savedSelection, setCursorMarker, setSelectionMarker, showAddBar, showAddButton, showTextEditBox, surroundRange, throttle, toggleAddBar, toggleTag;
+  var addAudio, addElement, addH1, addH2, addImage, addLink, addOlist, addPlaceholder, addQuote, addURL, addUlist, addVideo, addWrapper, assetBase, checkPlaceholderPosition, clearCursorMarker, clearSelectionMarkers, currentPlaceholderPosition, getFirstRange, getSelectedText, handleHover, handleSelection, hasElement, hideAddBar, hideAddButton, hideTextEditBox, makeSelectionWrappable, movePlaceholder, moveTimer, normalizeText, removeLink, removeWrapper, savedSelection, selectNewObject, setCursorMarker, setSelectionMarker, showAddButton, showTextEditBox, surroundRange, throttle, toggleAddBar, toggleTag;
 
   assetBase = (window.assets ? window.assets : "");
 
@@ -43,6 +43,14 @@
       }
     });
     $('.addPlaceholder .add-item').on("click", toggleAddBar);
+    $('.addPlaceholder .add-image').on("click", addImage);
+    $('.addPlaceholder .add-video').on("click", addVideo);
+    $('.addPlaceholder .add-audio').on("click", addAudio);
+    $('.addPlaceholder .add-h1').on("click", addH1);
+    $('.addPlaceholder .add-h2').on("click", addH2);
+    $('.addPlaceholder .add-quote').on("click", addQuote);
+    $('.addPlaceholder .add-olist').on("click", addOlist);
+    $('.addPlaceholder .add-ulist').on("click", addUlist);
   });
 
 
@@ -82,9 +90,6 @@
       nearBot = my < (bot + margin) && my > bot - (height / 2) && my > bot - 125;
       if (nearTop) {
         checkPlaceholderPosition(t, "top");
-        if (!t.prev().hasClass("addPlaceholder")) {
-          $(".addPlaceholder");
-        }
       } else if (nearBot) {
         checkPlaceholderPosition(t, "bottom");
       } else {
@@ -111,7 +116,6 @@
       if (addPlaceholder.hasClass('showButton')) {
         hideAddButton();
         moveTimer = setTimeout((function() {
-          console.log("movetimer");
           movePlaceholder(el, location);
           moveTimer = null;
         }), 200);
@@ -123,6 +127,14 @@
     }
   };
 
+
+  /*
+   * Func: movePlaceholder
+   * Desc: Move the placeholder div to the correct location, above or below the relevant element
+   * Args: @el - jQuery Object - The element that should be adjacent to the placeholder div
+           @location - String - The location relative to @el where the placeholder should appear ("top" or "bot")
+   */
+
   movePlaceholder = function(el, location) {
     if (location === "top") {
       addPlaceholder.detach().insertBefore(el);
@@ -132,33 +144,113 @@
     currentPlaceholderPosition = addPlaceholder.index();
   };
 
+
+  /*
+   * Func: showAddButton
+   * Desc: Make the "add" button appear. This is the button that reveals the Add Bar when clicked
+   * Args: none
+   */
+
   showAddButton = function() {
     if (!addPlaceholder.hasClass('showButton')) {
       addPlaceholder.addClass('showButton');
     }
   };
 
+
+  /*
+   * Func: hideAddButton
+   * Desc: Make the "add" button disappear. This is the button that reveals the Add Bar when clicked 
+   * Args: none
+   */
+
   hideAddButton = function() {
     addPlaceholder.removeClass('showButton');
     addPlaceholder.removeClass('showBar');
   };
 
+
+  /*
+   * Func: toggleAddBar
+   * Desc: Toggle visibility of the Add Bar. This bar allows the user to add elements to the DOM
+   * Args: none
+   */
+
   toggleAddBar = function() {
     if (!addPlaceholder.hasClass('showBar')) {
-      return showAddBar();
+      return addPlaceholder.addClass('showBar');
     } else {
       return hideAddBar();
     }
   };
 
-  showAddBar = function() {
-    if (!addPlaceholder.hasClass('showBar')) {
-      addPlaceholder.addClass('showBar');
-    }
-  };
+
+  /*
+   * Func: hideAddBar
+   * Desc: Remove visibility of the Add Bar. This bar allows the user to add elements to the DOM
+   * Args: none
+   */
 
   hideAddBar = function() {
-    addPlaceholder.removeClass('showBar');
+    return addPlaceholder.removeClass('showBar');
+  };
+
+
+  /*
+   * Func: Add Functions
+   * Desc: Toggle visibility of the Add Bar. This bar allows the user to add elements to the DOM
+   * Args: none
+   */
+
+  addImage = function() {
+    return addElement('<img />');
+  };
+
+  addVideo = function() {
+    return addElement('<div class="video"></div>');
+  };
+
+  addAudio = function() {
+    return addElement('<div class="audio"></div>');
+  };
+
+  addH1 = function() {
+    return addElement('<h1>[title]</h1>');
+  };
+
+  addH2 = function() {
+    return addElement('<h2>[title]</h2>');
+  };
+
+  addQuote = function() {
+    return addElement('<blockquote>[quote]</blockquote>');
+  };
+
+  addOlist = function() {
+    return addElement('<ol><li></li></ol>');
+  };
+
+  addUlist = function() {
+    return addElement('<ul><li></li></ul>');
+  };
+
+  addElement = function(newEl) {
+    var el, newClass;
+    hideAddBar();
+    el = $(newEl);
+    newClass = 'newEl';
+    el.addClass(newClass);
+    $('.addPlaceholder').after(el);
+    selectNewObject(newClass);
+  };
+
+  selectNewObject = function(className) {
+    var newRange, node;
+    newRange = rangy.createRange();
+    node = $('.' + className).get(0);
+    newRange.selectNodeContents(node);
+    rangy.getSelection().setSingleRange(newRange);
+    $('.' + className).removeClass(className);
   };
 
 
