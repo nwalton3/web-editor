@@ -41,7 +41,15 @@ $(document).ready ->
 		if e.keyCode is 13
 			addURL "temporaryLink", $('#linkInput').val()
 
-	$('.addPlaceholder .add-item').on "click", toggleAddBar
+	$('.addPlaceholder .add-item' ).on "click", toggleAddBar
+	$('.addPlaceholder .add-image').on "click", addImage
+	$('.addPlaceholder .add-video').on "click", addVideo
+	$('.addPlaceholder .add-audio').on "click", addAudio
+	$('.addPlaceholder .add-h1'   ).on "click", addH1  
+	$('.addPlaceholder .add-h2'   ).on "click", addH2  
+	$('.addPlaceholder .add-quote').on "click", addQuote
+	$('.addPlaceholder .add-olist').on "click", addOlist
+	$('.addPlaceholder .add-ulist').on "click", addUlist
 
 	return
 
@@ -78,7 +86,8 @@ handleHover = (e, out) ->
 	parent = t.hasClass('editable')
 	addBar = t.hasClass("addPlaceholder")
 
-	if !parent and !addBar
+	# If this is not the container (".editable") and not the Placehoder div, see if you need to move the Placeholder
+	if !parent and !addBar 
 		height = t.height()
 		pos = t.offset()
 		top = pos.top
@@ -86,20 +95,21 @@ handleHover = (e, out) ->
 		margin = parseInt( t.css('margin-bottom') )
 		my = e.pageY
 
-		nearTop = my > top and my < top + (height / 2) and my < top + 100
+		# If the mouse position is within a specified range of the top or bottom of the element, set a flag
+		nearTop = my > top and my < top + (height / 2) and my < top + 100 
 		nearBot = my < (bot + margin) and my > bot - (height / 2) and my > bot - 125
 
+		# Handle the mouse location
 		if nearTop
 			checkPlaceholderPosition t, "top"
-			if !t.prev().hasClass("addPlaceholder")
-				$(".addPlaceholder")
 		else if nearBot
 			checkPlaceholderPosition t, "bottom"
 		else
 			hideAddButton()
+
+	# Otherwise, just show the add button (so it doesn't flicker)
 	else
 		showAddButton()
-		# console.log t
 
 	return
 
@@ -118,7 +128,6 @@ checkPlaceholderPosition = (el, location) ->
 		if addPlaceholder.hasClass('showButton')
 			hideAddButton()
 			moveTimer = setTimeout ( -> 
-				console.log "movetimer"
 				movePlaceholder el, location
 				moveTimer = null
 				return ), 200
@@ -129,6 +138,13 @@ checkPlaceholderPosition = (el, location) ->
 
 	return
 
+
+###
+ * Func: movePlaceholder
+ * Desc: Move the placeholder div to the correct location, above or below the relevant element
+ * Args: @el - jQuery Object - The element that should be adjacent to the placeholder div
+         @location - String - The location relative to @el where the placeholder should appear ("top" or "bot")
+###
 movePlaceholder = (el, location) ->
 	if location is "top"
 		addPlaceholder.detach().insertBefore(el)
@@ -138,29 +154,89 @@ movePlaceholder = (el, location) ->
 	# setTimeout showAddButton 25
 	return
 
+
+###
+ * Func: showAddButton
+ * Desc: Make the "add" button appear. This is the button that reveals the Add Bar when clicked
+ * Args: none
+###
 showAddButton = () ->
 	if !addPlaceholder.hasClass('showButton')
 		addPlaceholder.addClass('showButton')
 	return
 
+
+###
+ * Func: hideAddButton
+ * Desc: Make the "add" button disappear. This is the button that reveals the Add Bar when clicked 
+ * Args: none
+###
 hideAddButton = () ->
 	addPlaceholder.removeClass('showButton')
 	addPlaceholder.removeClass('showBar')
 	return
 
+
+###
+ * Func: toggleAddBar
+ * Desc: Toggle visibility of the Add Bar. This bar allows the user to add elements to the DOM
+ * Args: none
+###
 toggleAddBar = () ->
 	if !addPlaceholder.hasClass('showBar')
-		showAddBar()
+		addPlaceholder.addClass('showBar')
 	else
 		hideAddBar()
 
-showAddBar = () ->
-	if !addPlaceholder.hasClass('showBar')
-		addPlaceholder.addClass('showBar')
-	return
-
+###
+ * Func: hideAddBar
+ * Desc: Remove visibility of the Add Bar. This bar allows the user to add elements to the DOM
+ * Args: none
+###
 hideAddBar = () ->
 	addPlaceholder.removeClass('showBar')
+
+
+###
+ * Func: Add Functions
+ * Desc: Toggle visibility of the Add Bar. This bar allows the user to add elements to the DOM
+ * Args: none
+###
+addImage = () ->
+	addElement '<img />'
+addVideo = () ->
+	addElement '<div class="video"></div>'
+addAudio = () ->
+	addElement '<div class="audio"></div>'
+addH1    = () ->
+	addElement '<h1>[title]</h1>'
+addH2    = () ->
+	addElement '<h2>[title]</h2>'
+addQuote = () ->
+	addElement '<blockquote>[quote]</blockquote>'
+addOlist = () ->
+	addElement '<ol><li></li></ol>'
+addUlist = () ->
+	addElement '<ul><li></li></ul>'
+
+
+addElement = (newEl) ->
+	hideAddBar()
+	el = $(newEl)
+	newClass = 'newEl'
+
+	el.addClass newClass
+	$('.addPlaceholder').after el
+	selectNewObject newClass
+	return
+
+selectNewObject = (className) ->
+	newRange = rangy.createRange()
+	node = $('.' + className).get 0
+
+	newRange.selectNodeContents node
+	rangy.getSelection().setSingleRange newRange
+	$('.' + className).removeClass className
 	return
 
 
