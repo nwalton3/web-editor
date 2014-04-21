@@ -11,11 +11,11 @@
 
 (function() {
   "use strict";
-  if (!window.assets) {
+  if (!'assets' in window) {
     window.assets = "/";
   }
 
-  if (!window.jsVersion) {
+  if (!'jsVersion' in window) {
     window.jsVersion = 1;
   }
 
