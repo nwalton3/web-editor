@@ -1,9 +1,11 @@
 (function() {
-  var addAudio, addElement, addH1, addH2, addImage, addLink, addOlist, addPlaceholder, addQuote, addURL, addUlist, addVideo, addWrapper, assetBase, checkPlaceholderPosition, clearCursorMarker, clearSelectionMarkers, currentPlaceholderPosition, getFirstRange, getSelectedText, handleHover, handleSelection, hasElement, hideAddBar, hideAddButton, hideTextEditBox, makeSelectionWrappable, movePlaceholder, moveTimer, normalizeText, removeLink, removeWrapper, savedSelection, selectNewObject, setCursorMarker, setSelectionMarker, showAddButton, showTextEditBox, surroundRange, throttle, toggleAddBar, toggleTag;
+  var $editor, addAudio, addElement, addH1, addH2, addImage, addLink, addOlist, addPlaceholder, addQuote, addURL, addUlist, addVideo, addWrapper, assetBase, changed, checkPlaceholderPosition, clearCursorMarker, clearSelectionMarkers, currentPlaceholderPosition, getFirstRange, getSelectedText, handleDrop, handleHover, handlePaste, handleSelection, hasElement, hideAddBar, hideAddButton, hideTextEditBox, makeSelectionWrappable, movePlaceholder, moveTimer, normalizeText, removeLink, removeWrapper, sanitize, sanitizeIfChanged, savedSelection, selectNewObject, setCursorMarker, setSelectionMarker, showAddButton, showTextEditBox, surroundRange, throttle, toggleAddBar, toggleTag;
 
   assetBase = (window.assets ? window.assets : "");
 
   savedSelection = void 0;
+
+  $editor = $(".editContainer");
 
   addPlaceholder = $('.addPlaceholder');
 
@@ -16,7 +18,11 @@
     $("#addLink").modal({
       show: false
     });
-    $(document).on("mouseup", handleSelection).on("keyup", handleSelection);
+    setInterval(sanitizeIfChanged, 100);
+    $(document).on("mouseup", handleSelection).on("keyup", handleSelection).on("keydown", function() {
+      var changed;
+      changed = true;
+    }).on("paste", handlePaste).on("drop", handleDrop);
     $('.editable').on('mouseover', '> *', (function(e) {
       return handleHover(e);
     })).on('mousemove', '> *', throttle((function(e) {
@@ -97,6 +103,73 @@
       }
     } else {
       showAddButton();
+    }
+  };
+
+
+  /*
+   * Func: handlePaste
+   * Desc: handles the user pasting to the page.  Calls the sanitize method
+   * Args: none
+   */
+
+  handlePaste = function() {
+    setTimeout(sanitize, 0);
+    return true;
+  };
+
+
+  /*
+   * Func: handleDrop
+   * Desc: handles the user dropping content onto the page.  Calls the sanitize method
+   * Args: none
+   */
+
+  handleDrop = function() {
+    setTimeout(sanitize, 0);
+    return true;
+  };
+
+
+  /*
+   * Func: sanitize
+   * Desc: Does some basic sanitization on the data.  This is used when 
+   * Args: none
+   */
+
+  sanitize = function() {
+    $editor.find('meta').detach();
+    $editor.find('span,font').contents().unwrap();
+    $editor.find('b').contents().unwrap().wrap('<strong />');
+    $editor.find('i').contents().unwrap().wrap('<em />');
+    $editor.find('.addPlaceholder').each(function() {
+      if ($(this).attr('contenteditable') !== "true") {
+        return $(this).detach();
+      }
+    });
+    $editor.find('strong + strong, em + em').each(function() {
+      var $prev, prevContents;
+      $prev = $(this).prev();
+      prevContents = $prev.html();
+      $prev.detach();
+      return $(this).html(prevContents + $(this).html());
+    });
+    $editor.find("[style]").removeAttr("style");
+  };
+
+
+  /*
+   * Func: sanitizeIfChanged
+   * Desc: Checks the global changed variable and calls sanitize if needed.
+   * Args: none
+   */
+
+  changed = false;
+
+  sanitizeIfChanged = function() {
+    if (changed) {
+      sanitize($editor);
+      changed = false;
     }
   };
 

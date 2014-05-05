@@ -8,6 +8,7 @@
 # Variables
 assetBase = (if window.assets then window.assets else "")
 savedSelection = undefined
+$editor = $(".editContainer")
 addPlaceholder = $('.addPlaceholder')
 currentPlaceholderPosition = null
 moveTimer = null
@@ -19,11 +20,21 @@ $(document).ready ->
 	rangy.init()
 
 	$("#addLink").modal show: false
+	
+	setInterval(sanitizeIfChanged, 100)
 
 	# Document Bindings
 	$(document)
 		.on("mouseup", handleSelection)
 		.on("keyup", handleSelection)
+		.on("keydown", ->
+			changed = true
+			return
+		)
+		.on("paste", handlePaste)
+		.on("drop", handleDrop)
+	
+
 	$('.editable')
 		.on('mouseover', '> *', ( (e) -> handleHover e) )
 		.on('mousemove', '> *', throttle ( (e) ->
@@ -50,7 +61,7 @@ $(document).ready ->
 	$('.addPlaceholder .add-quote').on "click", addQuote
 	$('.addPlaceholder .add-olist').on "click", addOlist
 	$('.addPlaceholder .add-ulist').on "click", addUlist
-
+	
 	return
 
 
@@ -113,7 +124,76 @@ handleHover = (e, out) ->
 
 	return
 
+###
+ * Func: handlePaste
+ * Desc: handles the user pasting to the page.  Calls the sanitize method
+ * Args: none
+###	
+handlePaste = ->	   
+	setTimeout sanitize, 0
+	return true
 
+###
+ * Func: handleDrop
+ * Desc: handles the user dropping content onto the page.  Calls the sanitize method
+ * Args: none
+###	
+handleDrop = ->
+	setTimeout sanitize, 0
+	return true
+
+###
+ * Func: sanitize
+ * Desc: Does some basic sanitization on the data.  This is used when 
+ * Args: none
+###	
+sanitize = ->
+
+	# remove meta tags
+	$editor.find('meta').detach();
+
+	# for now, remove all span and font tags, keeping children
+	$editor.find('span,font').contents().unwrap()
+	
+	# convert all b tags to strong, and i tags to em, and div to p
+	$editor.find('b').contents().unwrap().wrap('<strong />')
+	$editor.find('i').contents().unwrap().wrap('<em />')
+	
+	# remove any duplicate placeholders
+	$editor.find('.addPlaceholder').each( ->
+		if($(this).attr('contenteditable') != "true")
+			$(this).detach()
+	)
+	
+	# combine adjacent strong tags; and em tags:
+	$editor.find('strong + strong, em + em').each( ->
+		$prev = $(this).prev()
+		prevContents = $prev.html()
+		$prev.detach()
+		$(this).html(prevContents + $(this).html())
+	)
+	
+	# remove empty tags: (this needs tweaking)
+	# $editor.find('*:not(img):empty').detach()
+	
+	# remove the style attributes from elements.  If we allow highlighting or coloring,
+	# this may need to be reworked
+	$editor.find("[style]").removeAttr("style")
+	
+	return
+	
+###
+ * Func: sanitizeIfChanged
+ * Desc: Checks the global changed variable and calls sanitize if needed.
+ * Args: none
+###
+changed = false
+sanitizeIfChanged = () ->
+	if changed
+		sanitize $editor
+		changed = false
+	return
+	
 ###
  * Func: checkPlaceholderPosition
  * Desc: Check to see if the placeholder is in the proper position and show the add button if applicable
