@@ -1,63 +1,136 @@
+
+/*GLOBALS */
+
 (function() {
-  var $editor, addAudio, addElement, addH1, addH2, addImage, addLink, addOlist, addPlaceholder, addQuote, addURL, addUlist, addVideo, addWrapper, assetBase, changed, checkPlaceholderPosition, clearCursorMarker, clearSelectionMarkers, currentPlaceholderPosition, getFirstRange, getSelectedText, handleDrop, handleHover, handlePaste, handleSelection, hasElement, hideAddBar, hideAddButton, hideTextEditBox, makeSelectionWrappable, movePlaceholder, moveTimer, normalizeText, removeLink, removeWrapper, sanitize, sanitizeIfChanged, savedSelection, selectNewObject, setCursorMarker, setSelectionMarker, showAddButton, showTextEditBox, surroundRange, throttle, toggleAddBar, toggleTag;
+  var Editor, assetBase, editor1, editor2, throttle;
 
   assetBase = (window.assets ? window.assets : "");
 
-  savedSelection = void 0;
 
-  $editor = $(".editContainer");
+  /*GLOBAL INITIALIZATION */
 
-  addPlaceholder = $('.addPlaceholder');
+  rangy.init();
 
-  currentPlaceholderPosition = null;
 
-  moveTimer = null;
+  /*
+   * Func: Editor constructor
+   * Desc: Creates an Editor instance.  Sets sanitizing intervals on change, paste,
+  				 and drop.  Creates the editing tools.
+   * Args: a DOMElement with a child with class '.editable' which will become
+  				 the editor.  It can already contain content.
+   */
 
-  $(document).ready(function() {
-    rangy.init();
+  Editor = function(node) {
+    var dontSanitizeKeys, editor;
+    this.$editor = $(node).find('.editable');
+    this.$ = $.proxy(this.$editor.find, this.$editor);
+    this.currentPlaceholderPosition = null;
+    this.moveTimer = null;
+    this.changed = false;
+    this.savedSelection = void 0;
+    editor = this;
     $("#addLink").modal({
       show: false
     });
-    setInterval(sanitizeIfChanged, 100);
-    $(document).on("mouseup", handleSelection).on("keyup", handleSelection).on("keydown", function() {
-      var changed;
-      changed = true;
-    }).on("paste", handlePaste).on("drop", handleDrop);
-    $('.editable').on('mouseover', '> *', (function(e) {
-      return handleHover(e);
-    })).on('mousemove', '> *', throttle((function(e) {
-      handleHover(e);
+    setInterval((function() {
+      return editor.sanitizeIfChanged();
+    }), 100);
+    this.setupEditingTools();
+    this.hideTextEditBox();
+    dontSanitizeKeys = [37, 38, 39, 40, 16, 17, 18, 91, 92, 144, 35, 36, 45, 33, 34, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 27, 20, 145, 19];
+    $(document).on("mouseup", function() {
+      return editor.handleSelection();
+    }).on("keyup", function() {
+      return editor.handleSelection();
+    }).on("keydown", function(e) {
+      if (dontSanitizeKeys.indexOf(e.keyCode) === -1) {
+        editor.changed = true;
+      }
+    }).on("paste", function() {
+      return editor.handlePaste();
+    }).on("drop", function() {
+      return editor.handleDrop();
+    });
+    this.$editor.on('mouseover', '> *', function(e) {
+      return editor.handleHover(e);
+    }).on('mousemove', '> *', throttle((function(e) {
+      editor.handleHover(e);
     }), 100));
-    $(".add-bold").on("click", function(e) {
-      return toggleTag("strong");
+    this.$editor.attr('contenteditable', "true");
+    this.textEditBox.find(".add-bold").on("click", function(e) {
+      return editor.toggleTag("strong");
     });
-    $(".add-italic").on("click", function(e) {
-      return toggleTag("em");
+    this.textEditBox.find(".add-italic").on("click", function(e) {
+      return editor.toggleTag("em");
     });
-    $(".add-link").on("click", function(e) {
-      return addLink("temporaryLink");
+    this.textEditBox.find(".add-link").on("click", function() {
+      return editor.addLink("temporaryLink");
     });
-    $("#addLink .save").on("click", function(e) {
-      return addURL("temporaryLink", $('#linkInput').val());
+    $("#addLink .save").on("click", function() {
+      return editor.addURL("temporaryLink", $('#linkInput').val());
     });
-    $("#addLink .cancel").on("click", function(e) {
-      return removeLink("temporaryLink");
+    $("#addLink .cancel").on("click", function() {
+      return editor.removeLink("temporaryLink");
     });
     $("#addLink #linkInput").on("keyup", function(e) {
       if (e.keyCode === 13) {
-        return addURL("temporaryLink", $('#linkInput').val());
+        return editor.addURL("temporaryLink", $('#linkInput').val());
       }
     });
-    $('.addPlaceholder .add-item').on("click", toggleAddBar);
-    $('.addPlaceholder .add-image').on("click", addImage);
-    $('.addPlaceholder .add-video').on("click", addVideo);
-    $('.addPlaceholder .add-audio').on("click", addAudio);
-    $('.addPlaceholder .add-h1').on("click", addH1);
-    $('.addPlaceholder .add-h2').on("click", addH2);
-    $('.addPlaceholder .add-quote').on("click", addQuote);
-    $('.addPlaceholder .add-olist').on("click", addOlist);
-    $('.addPlaceholder .add-ulist').on("click", addUlist);
-  });
+  };
+
+
+  /*
+   * Func: setupEditingTools
+   * Desc: Sets up the editing tools (the add placeholder and the text edit bar) on the editor
+   *			 Need to look into templating this
+   * Args: none
+   */
+
+  Editor.prototype.setupEditingTools = function() {
+    var $textEditBar;
+    this.ensureAddPlaceholder();
+    $textEditBar = $('<div class="textEditBar"> <div class="btn-group"> <button type="button" class="btn btn-primary add-bold fa fa-bold">Bold</button> <button type="button" class="btn btn-primary add-italic fa fa-italic">Italic</button> <button type="button" data-toggle="modal" data-target="addLink" class="btn btn-primary add-link fa fa-link">Link</button> </div> </div>');
+    this.$editor.after($textEditBar);
+    this.textEditBox = $textEditBar;
+  };
+
+  Editor.prototype.ensureAddPlaceholder = function() {
+    var $placeholder, editor;
+    if (!this.$('.addPlaceholder').length) {
+      $placeholder = $('<div contenteditable="false" class="addPlaceholder"> <div class="addButton"> <button type="button" class="btn btn-default add-item fa fa-plus">Add</button> </div> <div class="addBar"> <div class="btn-group"> <!--button.btn.btn-lg.btn-primary.add-image.fa.fa-picture-o(type="button") Image--> <!--button.btn.btn-lg.btn-primary.add-video.fa.fa-film(type="button") Video--> <!--button.btn.btn-lg.btn-primary.add-video.fa.fa-headphones(type="button") Audio--> <button type="button" class="btn btn-lg btn-primary add-h1 fa">h1</button> <button type="button" class="btn btn-lg btn-primary add-h2 fa">h2</button> <!--button.btn.btn-lg.btn-primary.add-ulist.fa.fa-quote-right(type="button") Blockquote--> <button type="button" class="btn btn-lg btn-primary add-olist fa fa-list-ul">Ordered List</button> <button type="button" class="btn btn-lg btn-primary add-ulist fa fa-list-ol">Unordered List</button> </div> </div> </div>');
+      this.$editor.append($placeholder);
+      this.addPlaceholder = $placeholder;
+      editor = this;
+      this.addPlaceholder.find('.add-item').on("click", function() {
+        return editor.toggleAddBar();
+      });
+      this.addPlaceholder.find('.add-image').on("click", function() {
+        return editor.addImage();
+      });
+      this.addPlaceholder.find('.add-video').on("click", function() {
+        return editor.addVideo();
+      });
+      this.addPlaceholder.find('.add-audio').on("click", function() {
+        return editor.addAudio();
+      });
+      this.addPlaceholder.find('.add-h1').on("click", function() {
+        return editor.addH1();
+      });
+      this.addPlaceholder.find('.add-h2').on("click", function() {
+        return editor.addH2();
+      });
+      this.addPlaceholder.find('.add-quote').on("click", function() {
+        return editor.addQuote();
+      });
+      this.addPlaceholder.find('.add-olist').on("click", function() {
+        return editor.addOlist();
+      });
+      this.addPlaceholder.find('.add-ulist').on("click", function() {
+        return editor.addUlist();
+      });
+    }
+  };
 
 
   /*
@@ -66,9 +139,9 @@
    * Args: none
    */
 
-  handleSelection = function() {
-    if (getSelectedText()) {
-      showTextEditBox();
+  Editor.prototype.handleSelection = function() {
+    if (this.getSelectedText()) {
+      this.showTextEditBox();
     }
   };
 
@@ -77,10 +150,10 @@
    * Func: handleHover
    * Desc: Actions to perform when an editable element is hovered
    * Args: @e - jQuery Event Object - Passed from the jQuery .on() function
-           @out - Boolean - Whether the hover is inside the object (mouseout = false)
+  				 @out - Boolean - Whether the hover is inside the object (mouseout = false)
    */
 
-  handleHover = function(e, out) {
+  Editor.prototype.handleHover = function(e, out) {
     var addBar, bot, height, margin, my, nearBot, nearTop, parent, pos, t, top;
     t = $(e.currentTarget);
     parent = t.hasClass('editable');
@@ -95,14 +168,14 @@
       nearTop = my > top && my < top + (height / 2) && my < top + 100;
       nearBot = my < (bot + margin) && my > bot - (height / 2) && my > bot - 125;
       if (nearTop) {
-        checkPlaceholderPosition(t, "top");
+        this.checkPlaceholderPosition(t, "top");
       } else if (nearBot) {
-        checkPlaceholderPosition(t, "bottom");
+        this.checkPlaceholderPosition(t, "bottom");
       } else {
-        hideAddButton();
+        this.hideAddButton();
       }
     } else {
-      showAddButton();
+      this.showAddButton();
     }
   };
 
@@ -113,8 +186,12 @@
    * Args: none
    */
 
-  handlePaste = function() {
-    setTimeout(sanitize, 0);
+  Editor.prototype.handlePaste = function() {
+    var editor;
+    editor = this;
+    setTimeout((function() {
+      return editor.sanitize();
+    }), 0);
     return true;
   };
 
@@ -125,36 +202,102 @@
    * Args: none
    */
 
-  handleDrop = function() {
-    setTimeout(sanitize, 0);
+  Editor.prototype.handleDrop = function() {
+    var editor;
+    editor = this;
+    setTimeout((function() {
+      return editor.sanitize();
+    }), 0);
     return true;
   };
 
 
   /*
-   * Func: sanitize
-   * Desc: Does some basic sanitization on the data.  This is used when 
+   * Func: getContents
+   * Desc: gets the HTML string for the contents of this editor
    * Args: none
    */
 
-  sanitize = function() {
-    $editor.find('meta').detach();
-    $editor.find('span,font').contents().unwrap();
-    $editor.find('b').contents().unwrap().wrap('<strong />');
-    $editor.find('i').contents().unwrap().wrap('<em />');
-    $editor.find('.addPlaceholder').each(function() {
+  Editor.prototype.getContents = function() {
+    var html;
+    html = "";
+    this.addPlaceholder.detach();
+    html = this.$editor.html().trim();
+    this.$editor.children().eq(this.currentPlaceholderPosition - 1).after(this.addPlaceholder);
+    return html;
+  };
+
+
+  /*
+   * Func: getContents
+   * Desc: sets the HTML for the contents of this editor
+   * Args: none
+   */
+
+  Editor.prototype.setContents = function(html) {
+    this.$editor.html(html);
+    return this.ensureAddPlaceholder();
+  };
+
+
+  /*
+   * Func: clearContents
+   * Desc: clears the contents of the editor entirely, replacing with an empty p tag
+   * Args: none
+   */
+
+  Editor.prototype.clearContents = function() {
+    this.$editor.html("<p>&nbsp;</p>");
+    return this.ensureAddPlaceholder();
+  };
+
+
+  /*
+   * Func: sanitize
+   * Desc: Does some basic sanitization on the data.  This is used when pasted or
+  					dragged into.
+   * Args: none
+   */
+
+  Editor.prototype.sanitize = function() {
+    var nextNode, node;
+    console.log("sanitize");
+    if (!this.$('p').length) {
+      this.$editor.append('<p>&nbsp;</p>');
+    }
+    this.ensureAddPlaceholder();
+    node = this.$editor[0].firstChild;
+    while (node) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node.wholeText.trim() !== "") {
+          $(node).wrap("<p />");
+          node = node.nextSibling;
+        } else {
+          nextNode = node.nextSibling;
+          node.parentNode.removeChild(node);
+          node = nextNode;
+        }
+      } else {
+        node = node.nextSibling;
+      }
+    }
+    this.$editor.find('meta').detach();
+    this.$editor.find('span,font').contents().unwrap();
+    this.$editor.find('b').contents().unwrap().wrap('<strong />');
+    this.$editor.find('i').contents().unwrap().wrap('<em />');
+    this.$editor.find('.addPlaceholder').each(function() {
       if ($(this).attr('contenteditable') !== "true") {
         return $(this).detach();
       }
     });
-    $editor.find('strong + strong, em + em').each(function() {
+    this.$editor.find('strong + strong, em + em').each(function() {
       var $prev, prevContents;
       $prev = $(this).prev();
       prevContents = $prev.html();
       $prev.detach();
       return $(this).html(prevContents + $(this).html());
     });
-    $editor.find("[style]").removeAttr("style");
+    this.$editor.find("[style]").removeAttr("style");
   };
 
 
@@ -164,12 +307,10 @@
    * Args: none
    */
 
-  changed = false;
-
-  sanitizeIfChanged = function() {
-    if (changed) {
-      sanitize($editor);
-      changed = false;
+  Editor.prototype.sanitizeIfChanged = function() {
+    if (this.changed) {
+      this.sanitize();
+      this.changed = false;
     }
   };
 
@@ -178,25 +319,26 @@
    * Func: checkPlaceholderPosition
    * Desc: Check to see if the placeholder is in the proper position and show the add button if applicable
    * Args: @el - jQuery object - The element before or after where the add placeholder should appear
-           @location - String - The location relative to @el where the placeholder should appear ("top" or "bot")
+  				 @location - String - The location relative to @el where the placeholder should appear ("top" or "bot")
    */
 
-  checkPlaceholderPosition = function(el, location) {
-    var moveBottom, moveTop;
-    moveTop = location === "top" && (el.index() - 1) !== currentPlaceholderPosition;
-    moveBottom = location === "bottom" && (el.index() + 1) !== currentPlaceholderPosition;
-    if ((moveTop || moveBottom) && moveTimer === null) {
-      if (addPlaceholder.hasClass('showButton')) {
-        hideAddButton();
-        moveTimer = setTimeout((function() {
-          movePlaceholder(el, location);
-          moveTimer = null;
+  Editor.prototype.checkPlaceholderPosition = function(el, location) {
+    var editor, moveBottom, moveTop;
+    moveTop = location === "top" && (el.index() - 1) !== this.currentPlaceholderPosition;
+    moveBottom = location === "bottom" && (el.index() + 1) !== this.currentPlaceholderPosition;
+    editor = this;
+    if ((moveTop || moveBottom) && this.moveTimer === null) {
+      if (this.addPlaceholder.hasClass('showButton')) {
+        this.hideAddButton();
+        this.moveTimer = setTimeout((function() {
+          editor.movePlaceholder(el, location);
+          editor.moveTimer = null;
         }), 200);
       } else {
-        movePlaceholder(el, location);
+        this.movePlaceholder(el, location);
       }
-    } else if (moveTimer === null) {
-      showAddButton();
+    } else if (this.moveTimer === null) {
+      this.showAddButton();
     }
   };
 
@@ -205,16 +347,16 @@
    * Func: movePlaceholder
    * Desc: Move the placeholder div to the correct location, above or below the relevant element
    * Args: @el - jQuery Object - The element that should be adjacent to the placeholder div
-           @location - String - The location relative to @el where the placeholder should appear ("top" or "bot")
+  				 @location - String - The location relative to @el where the placeholder should appear ("top" or "bot")
    */
 
-  movePlaceholder = function(el, location) {
+  Editor.prototype.movePlaceholder = function(el, location) {
     if (location === "top") {
-      addPlaceholder.detach().insertBefore(el);
+      this.addPlaceholder.detach().insertBefore(el);
     } else if (location === "bottom") {
-      addPlaceholder.detach().insertAfter(el);
+      this.addPlaceholder.detach().insertAfter(el);
     }
-    currentPlaceholderPosition = addPlaceholder.index();
+    this.currentPlaceholderPosition = this.addPlaceholder.index();
   };
 
 
@@ -224,9 +366,10 @@
    * Args: none
    */
 
-  showAddButton = function() {
-    if (!addPlaceholder.hasClass('showButton')) {
-      addPlaceholder.addClass('showButton');
+  Editor.prototype.showAddButton = function() {
+    if (!this.addPlaceholder.hasClass('showButton')) {
+      $('.addPlaceholder').removeClass('showButton').removeClass('showBar');
+      this.addPlaceholder.addClass('showButton');
     }
   };
 
@@ -237,9 +380,9 @@
    * Args: none
    */
 
-  hideAddButton = function() {
-    addPlaceholder.removeClass('showButton');
-    addPlaceholder.removeClass('showBar');
+  Editor.prototype.hideAddButton = function() {
+    this.addPlaceholder.removeClass('showButton');
+    this.addPlaceholder.removeClass('showBar');
   };
 
 
@@ -249,11 +392,12 @@
    * Args: none
    */
 
-  toggleAddBar = function() {
-    if (!addPlaceholder.hasClass('showBar')) {
-      return addPlaceholder.addClass('showBar');
+  Editor.prototype.toggleAddBar = function() {
+    if (!this.addPlaceholder.hasClass('showBar')) {
+      $('.addPlaceholder').removeClass('showBar');
+      return this.addPlaceholder.addClass('showBar');
     } else {
-      return hideAddBar();
+      return this.hideAddBar();
     }
   };
 
@@ -264,8 +408,8 @@
    * Args: none
    */
 
-  hideAddBar = function() {
-    return addPlaceholder.removeClass('showBar');
+  Editor.prototype.hideAddBar = function() {
+    return this.addPlaceholder.removeClass('showBar');
   };
 
 
@@ -275,49 +419,49 @@
    * Args: none
    */
 
-  addImage = function() {
-    return addElement('<img />');
+  Editor.prototype.addImage = function() {
+    return this.addElement('<img />');
   };
 
-  addVideo = function() {
-    return addElement('<div class="video"></div>');
+  Editor.prototype.addVideo = function() {
+    return this.addElement('<div class="video"></div>');
   };
 
-  addAudio = function() {
-    return addElement('<div class="audio"></div>');
+  Editor.prototype.addAudio = function() {
+    return this.addElement('<div class="audio"></div>');
   };
 
-  addH1 = function() {
-    return addElement('<h1>[title]</h1>');
+  Editor.prototype.addH1 = function() {
+    return this.addElement('<h1>[title]</h1>');
   };
 
-  addH2 = function() {
-    return addElement('<h2>[title]</h2>');
+  Editor.prototype.addH2 = function() {
+    return this.addElement('<h2>[title]</h2>');
   };
 
-  addQuote = function() {
-    return addElement('<blockquote>[quote]</blockquote>');
+  Editor.prototype.addQuote = function() {
+    return this.addElement('<blockquote>[quote]</blockquote>');
   };
 
-  addOlist = function() {
-    return addElement('<ol><li></li></ol>');
+  Editor.prototype.addOlist = function() {
+    return this.addElement('<ol><li></li></ol>');
   };
 
-  addUlist = function() {
-    return addElement('<ul><li></li></ul>');
+  Editor.prototype.addUlist = function() {
+    return this.addElement('<ul><li></li></ul>');
   };
 
-  addElement = function(newEl) {
+  Editor.prototype.addElement = function(newEl) {
     var el, newClass;
-    hideAddBar();
+    this.hideAddBar();
     el = $(newEl);
     newClass = 'newEl';
     el.addClass(newClass);
-    $('.addPlaceholder').after(el);
-    selectNewObject(newClass);
+    this.addPlaceholder.after(el);
+    this.selectNewObject(newClass);
   };
 
-  selectNewObject = function(className) {
+  Editor.prototype.selectNewObject = function(className) {
     var newRange, node;
     newRange = rangy.createRange();
     node = $('.' + className).get(0);
@@ -331,25 +475,25 @@
    * Func: toggleTag
    * Desc: Toggle wrapping the current selection in a tag
    * Args: @tag - String - The tag that should be added or removed (i.e. "strong")
-           @newClass - String - A class to add to the tag
+  				 @newClass - String - A class to add to the tag
    */
 
-  toggleTag = function(tag, newClass) {
+  Editor.prototype.toggleTag = function(tag, newClass) {
     var addTag, curr, range, tagSelector, thisClass;
-    range = addWrapper();
+    range = this.addWrapper();
     thisClass = (newClass ? "." + newClass : "");
     tagSelector = tag + thisClass;
     curr = $(".currentSelection");
-    addTag = !hasElement(curr, tagSelector, true);
+    addTag = !this.hasElement(curr, tagSelector, true);
 
     /* If the current selection is not wrapped in the tag and does not contain the tag
     		then wrap the current selection in the specified tag
      */
     if (addTag) {
-      surroundRange(tag, newClass, range);
+      this.surroundRange(tag, newClass, range);
     }
-    removeWrapper();
-    rangy.restoreSelection(savedSelection);
+    this.removeWrapper();
+    rangy.restoreSelection(this.savedSelection);
     return addTag;
   };
 
@@ -357,12 +501,12 @@
   /*
    * Func: hasTag
    * Desc: Checks to see whether the specified element is wrapped by or contains the specified element AT ANY LEVEL
-   		 This means
+  		 This means
    * Args: @el - String - A jQuery-style identifier for base element (i.e. ".currentSelection")
-           @testEl - String - A jQuery-style identifier for test element (i.e. "strong")
+  				 @testEl - String - A jQuery-style identifier for test element (i.e. "strong")
    */
 
-  hasElement = function(el, testEl, remove) {
+  Editor.prototype.hasElement = function(el, testEl, remove) {
     var contains, hasTestElement, wrapped;
     wrapped = el.closest(testEl).size() > 0;
     contains = el.find(testEl).size() > 0;
@@ -385,13 +529,13 @@
    * Args: @identifier - String - A jQuery-style identifier for the link (i.e. "a.newLink")
    */
 
-  addURL = function(identifier, href) {
+  Editor.prototype.addURL = function(identifier, href) {
     var classString;
     classString = (identifier ? "." + identifier : "");
     $("#addLink").modal("hide");
     $('a' + classString).attr("href", href).removeClass(identifier);
     $('#linkInput').val('');
-    removeWrapper();
+    this.removeWrapper();
   };
 
 
@@ -401,11 +545,11 @@
    * Args: @identifier - String - A jQuery-style identifier for the link (i.e. "a.newLink")
    */
 
-  removeLink = function(identifier) {
+  Editor.prototype.removeLink = function(identifier) {
     $("#addLink").modal("hide");
     $('a.temporaryLink').contents().unwrap();
-    rangy.restoreSelection(savedSelection);
-    removeWrapper();
+    rangy.restoreSelection(this.savedSelection);
+    this.removeWrapper();
   };
 
 
@@ -415,19 +559,19 @@
    * Args: @identifier - String - A jQuery-style identifier for the class of the link (i.e. ".newLink")
    */
 
-  addLink = function(newClass) {
+  Editor.prototype.addLink = function(newClass) {
     var add;
-    addWrapper();
-    add = !hasElement($(".currentSelection"), "a", true);
+    this.addWrapper();
+    add = !this.hasElement($(".currentSelection"), "a", true);
     if (add) {
-      toggleTag("a", newClass);
+      this.toggleTag("a", newClass);
       $("#addLink").modal("show");
       window.setTimeout((function() {
         $('#addLink #linkInput').focus();
         return console.log("Focus, please");
       }), 250);
     }
-    removeWrapper();
+    this.removeWrapper();
     return add;
   };
 
@@ -438,10 +582,10 @@
    * Args: none
    */
 
-  addWrapper = function() {
+  Editor.prototype.addWrapper = function() {
     var range;
-    range = getFirstRange();
-    surroundRange("span", "currentSelection", range);
+    range = this.getFirstRange();
+    this.surroundRange("span", "currentSelection", range);
     return range;
   };
 
@@ -452,7 +596,7 @@
    * Args: none
    */
 
-  removeWrapper = function() {
+  Editor.prototype.removeWrapper = function() {
     $(".currentSelection").contents().unwrap();
   };
 
@@ -463,8 +607,8 @@
    * Args: none
    */
 
-  hideTextEditBox = function() {
-    $(".textEditBar").addClass("hidden");
+  Editor.prototype.hideTextEditBox = function() {
+    this.textEditBox.addClass("hidden");
   };
 
 
@@ -474,21 +618,20 @@
    * Args: none
    */
 
-  showTextEditBox = function() {
-    var editBar, left, sPos, selectionMarker, top;
+  Editor.prototype.showTextEditBox = function() {
+    var left, sPos, selectionMarker, top;
     selectionMarker = $(".rangySelectionBoundary").css("display", "inline").first();
-    editBar = $(".textEditBar");
     sPos = 0;
     top = 0;
     left = 0;
     if (selectionMarker) {
-      editBar.removeClass("hidden");
+      this.textEditBox.removeClass("hidden");
       sPos = selectionMarker.position();
-      top = sPos.top - editBar.height() - 15;
+      top = sPos.top - this.textEditBox.height() - 15;
       left = sPos.left - 15;
-      $(".textEditBar").css("top", top).css("left", left);
+      this.textEditBox.css("top", top).css("left", left);
     } else {
-      $(".textEditBar").hide();
+      this.textEditBox.hide();
     }
   };
 
@@ -499,16 +642,22 @@
    * Args: none
    */
 
-  getSelectedText = function() {
+  Editor.prototype.getSelectedText = function() {
     var hasSelection, sel, selectedText;
     sel = rangy.getSelection();
     selectedText = sel.toString();
     hasSelection = false;
-    if (selectedText) {
-      hasSelection = setSelectionMarker();
+    if (this.$editor.has(sel.anchorNode).length && this.$editor.has(sel.focusNode).length) {
+      if (selectedText) {
+        hasSelection = this.setSelectionMarker();
+      } else {
+        this.hideTextEditBox();
+        hasSelection = this.setCursorMarker();
+      }
     } else {
-      hideTextEditBox();
-      hasSelection = setCursorMarker();
+      this.hideTextEditBox();
+      this.clearCursorMarker();
+      this.clearSelectionMarkers();
     }
     return hasSelection;
   };
@@ -520,15 +669,15 @@
    * Args: none
    */
 
-  setCursorMarker = function() {
+  Editor.prototype.setCursorMarker = function() {
     var cursorActive, parent, range;
-    range = getFirstRange();
+    range = this.getFirstRange();
     cursorActive = true;
     if (range) {
       parent = $(range.startContainer);
       cursorActive = parent.closest(".editable").size() > 0;
     }
-    clearSelectionMarkers();
+    this.clearSelectionMarkers();
     return false;
   };
 
@@ -539,7 +688,7 @@
    * Args: none
    */
 
-  clearCursorMarker = function() {
+  Editor.prototype.clearCursorMarker = function() {
     $(".cursorSelection").remove();
   };
 
@@ -550,12 +699,12 @@
    * Args: none
    */
 
-  clearSelectionMarkers = function() {
-    clearCursorMarker();
-    if (savedSelection) {
-      rangy.removeMarkers(savedSelection);
-      savedSelection = null;
-      normalizeText();
+  Editor.prototype.clearSelectionMarkers = function() {
+    this.clearCursorMarker();
+    if (this.savedSelection) {
+      rangy.removeMarkers(this.savedSelection);
+      this.savedSelection = null;
+      this.normalizeText();
     }
   };
 
@@ -566,9 +715,9 @@
    * Args: none
    */
 
-  setSelectionMarker = function() {
-    clearSelectionMarkers();
-    savedSelection = rangy.saveSelection();
+  Editor.prototype.setSelectionMarker = function() {
+    this.clearSelectionMarkers();
+    this.savedSelection = rangy.saveSelection();
     return true;
   };
 
@@ -579,7 +728,7 @@
    * Args: none
    */
 
-  getFirstRange = function() {
+  Editor.prototype.getFirstRange = function() {
     var sel;
     sel = rangy.getSelection();
     return (sel.rangeCount ? sel.getRangeAt(0) : void 0);
@@ -593,9 +742,9 @@
    * Args: none
    */
 
-  normalizeText = function() {
+  Editor.prototype.normalizeText = function() {
     var eCon, range, sCon;
-    range = getFirstRange();
+    range = this.getFirstRange();
     sCon = range.startContainer;
     eCon = range.endContainer;
     try {
@@ -613,9 +762,9 @@
            @inputRange - OPTIONAL Rangy Object - A Range object (will use getFirstRange() if omitted)
    */
 
-  surroundRange = function(newElement, elClass, inputRange) {
+  Editor.prototype.surroundRange = function(newElement, elClass, inputRange) {
     var el, elementClass, ex, range;
-    range = (inputRange ? inputRange : getFirstRange());
+    range = (inputRange ? inputRange : this.getFirstRange());
     elementClass = (elClass ? elClass : "");
     if (range) {
       el = document.createElement(newElement);
@@ -643,9 +792,9 @@
    * Args: @inputRange - OPTIONAL Rangy Object - A Range object (will use getFirstRange() if omitted)
    */
 
-  makeSelectionWrappable = function(inputRange) {
+  Editor.prototype.makeSelectionWrappable = function(inputRange) {
     var range;
-    range = (inputRange ? inputRange : getFirstRange());
+    range = (inputRange ? inputRange : this.getFirstRange());
     if (range.canSurroundContents()) {
       return range;
     }
@@ -693,5 +842,27 @@
       }
     };
   };
+
+  window.Editor = Editor;
+
+  editor1 = new Editor($(".editContainer1")[0]);
+
+  window.editor1 = editor1;
+
+  editor2 = new Editor($(".editContainer2")[0]);
+
+  window.editor2 = editor2;
+
+  $('.save').on('click', function() {
+    console.log(editor1.getContents());
+    return console.log(editor2.getContents());
+  });
+
+  $('.btn.cancel').on('click', function() {
+    editor1.clearContents();
+    return editor2.setContents('<p>this is editor 2!</p>');
+  });
+
+  return Editor;
 
 }).call(this);
